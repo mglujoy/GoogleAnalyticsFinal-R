@@ -1,0 +1,135 @@
+---
+title: "daily_activity"
+author: "mglujoy"
+date: "2023-09-15"
+output: html_document
+---
+## Analyzing dailyActivity_merged.csv
+### Loading Libraries
+```{r loading libraries}
+library(tidyverse)
+library(here)
+library(skimr)
+library(janitor)
+library(dplyr)
+library(ggplot2)
+library(ggpmisc)
+library(quantreg)
+```
+### Loading CSV
+```{r loading csv}
+dailyActivity <- read_csv("C:/Users/mg/Documents/DataA/Final/FitabaseData/dailyActivity_merged.csv")
+```
+### Preview
+```{r preview}
+colnames(dailyActivity)
+glimpse(dailyActivity)
+head(dailyActivity)
+```
+### Clean Names
+Cleaning names and assigning to the variable so changes apply
+```{r clean names}
+dailyActivity <- clean_names(dailyActivity)
+```
+### Summarizing Data with mean and arrange
+```{r summarizing}
+dailyActivity_mean_data <- 
+  dailyActivity %>% 
+    group_by(id) %>% 
+    drop_na() %>% 
+    summarise(mean_total_steps = mean(total_steps), 
+              mean_total_distance = mean(total_distance), 
+              mean_calories = mean(calories)) %>% 
+    arrange(-mean_calories)
+```
+### Preview new data
+```{r print mean_data}
+print(dailyActivity_mean_data)
+```
+## Looking for the variable that best correlates with calories
+### Summarizing Data with sum and arrange
+Total steps and distance vs. calories
+```{r total}
+dailyActivity_total <- 
+  dailyActivity %>% 
+    group_by(id) %>% 
+    drop_na() %>% 
+    summarise(sum_total_steps = sum(total_steps), 
+              sum_total_distance = sum(total_distance), 
+              sum_calories = sum(calories)) %>% 
+    arrange(-sum_calories)
+```
+### Preview total data
+```{r print total}
+print(dailyActivity_total)
+```
+### Correlating Intensity with totals
+Total active, moderate and light activity distance vs. calories
+```{r intensity totals}
+intensity_total <- 
+  dailyActivity %>% 
+    group_by(id) %>% 
+    drop_na() %>% 
+    summarise(total_very_active_distance = sum(very_active_distance), 
+              total_moderately_active_distance = sum(moderately_active_distance),
+              total_light_active_distance = sum(light_active_distance),
+              total_calories = sum(calories)) %>% 
+  arrange(-total_calories)
+```
+### Preview intensity data
+```{r print intensity total}
+print(intensity_total)
+```
+### Searching for the correlation between intensity and calories
+Mean active, moderate and light activity distance vs. calories
+```{r intensity}
+intensity_mean_data <- 
+  dailyActivity %>% 
+    group_by(id) %>% 
+    drop_na() %>% 
+    summarise(mean_very_active_distance = mean(very_active_distance), 
+              mean_moderately_active_distance = mean(moderately_active_distance),
+              mean_light_active_distance = mean(light_active_distance),
+              mean_calories = mean(calories)) %>% 
+  arrange(-mean_calories)
+```
+### Preview intensity data
+```{r print intensity}
+print(intensity_mean_data)
+```
+### Correlating intensity minutes and Calories
+Total active, moderate and light activity minutes vs. calories
+```{r minutes total}
+intensity_minutes_total <- 
+  dailyActivity %>% 
+    group_by(id) %>% 
+    drop_na() %>% 
+    summarise(total_very_active_minutes = sum(very_active_minutes), 
+              total_moderately_active_minutes = sum(fairly_active_minutes),
+              total_light_active_minutes = sum(lightly_active_minutes),
+              total_calories = sum(calories)) %>% 
+  arrange(-total_calories)
+```
+### Preview minutes data
+```{r print minutes total}
+print(intensity_total)
+```
+## The Variables that best correlate with Calories
+### Total Distance, Very Active Minutes and Light Active Distance
+```{r vizualizations of correlations}
+ggplot(dailyActivity_total, aes(x=sum_total_distance, y=sum_calories)) +
+  geom_smooth(method = "lm", se= FALSE) +
+  geom_point() +
+  stat_poly_eq(use_label(c("eq", "R2")))
+
+ggplot(intensity_total, aes(x=total_light_active_distance, y=total_calories)) +
+  geom_smooth(method = "lm", se= FALSE) +
+  geom_point() +
+  stat_poly_eq(use_label(c("eq", "R2")))
+
+ggplot(intensity_minutes_total, aes(x=total_very_active_minutes, y=total_calories)) +
+  geom_smooth(method = "lm", se= FALSE) +
+  geom_point() +
+  stat_poly_eq(use_label(c("eq", "R2")))
+```
+
